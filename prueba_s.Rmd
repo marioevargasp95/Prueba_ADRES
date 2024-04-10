@@ -1,0 +1,353 @@
+---
+title: "prueba ADRES"
+author: "Mario Vargas"
+date: 
+output: word_document
+---
+
+#Istalara paquetes 
+```{r}
+# install.packages("DBI")
+# install.packages("RODBC")
+# install.packages("odbc")
+# install.packages("RMySQL")
+# install.packages("dplyr")
+# install.packages("ggplot2")
+# install.packages("RSQLite")
+#install.packages("readr")
+```
+#Cargar los paquetes
+```{r}
+library(tidyverse)
+library(DBI)
+library(RODBC)
+library(odbc)
+library(RMySQL)
+library(RSQLite)
+library(readr)
+```
+
+#Limpieza de data Municipios
+```{r}
+library(readr)
+Municipios <- read_delim("C:/Users/MARIO VARGAS/Downloads/Pruebas de trabajo 2024/Prueba Adres/Municipios/Municipios.csv", delim = ";", show_col_types = FALSE)
+head(Municipios)
+```
+
+```{r}
+#Limipeiza de dataframe en columnas como departamento,municipio y región 
+Municipios$Departamento <- str_to_title(str_replace_all(iconv(tolower(Municipios$Departamento), to = "ASCII//TRANSLIT"), "[^[:alnum:] ]", ""))
+Municipios$Departamento <- str_replace_all(Municipios$Departamento, "\\s+", " ")
+Municipios$Departamento <- str_trim(Municipios$Departamento, side = "right")
+#head(Municipios)
+```
+
+```{r}
+Municipios$Municipio <-  str_to_title(str_replace_all(iconv(tolower(Municipios$Municipio), to = "ASCII//TRANSLIT"), "[^[:alnum:] ]", ""))
+
+Municipios$Municipio <- str_replace_all(Municipios$Municipio, "\\s+", " ")
+Municipios$Municipio <- str_trim(Municipios$Municipio, side = "right")
+#head(Municipios)
+```
+
+```{r}
+Municipios$Region <-  str_to_title(str_replace_all(iconv(tolower(Municipios$Region), to = "ASCII//TRANSLIT"), "[^[:alnum:] ]", "\\s+"))
+#head(Municipios)
+```
+
+```{r}
+Municipios$Municipio <- str_trim(Municipios$Municipio, side = "left")
+#head(Municipios$Municipio)
+```
+
+```{r}
+Municipios$Municipio <- ifelse(Municipios$Municipio == "Dibula", "Dibulla", Municipios$Municipio)
+Municipios$Municipio <- ifelse(Municipios$Municipio == "Chivolo", "Chibolo", Municipios$Municipio)
+Municipios$Municipio <- ifelse(Municipios$Municipio == "Valle De Guamez", "Valle Del Guamuez", Municipios$Municipio)
+head(Municipios)
+```
+
+##Descargar la base limpia Municipios
+```{r}
+library(readr)
+write.csv2(Municipios, "C:/Users/MARIO VARGAS/Downloads/Pruebas de trabajo 2024/Prueba Adres/Municipios/Municipios.csv", row.names = FALSE, fileEncoding = "latin1")
+```
+
+##Cargar y limpieza de data Prestadores
+
+```{r}
+Prestadores <- read_delim("C:/Users/MARIO VARGAS/Downloads/Pruebas de trabajo 2024/Prueba Adres/Prestadores/Prestadores.csv", delim = ";", show_col_types = FALSE)
+head(Prestadores)
+```
+
+```{r}
+#Limipeiza de dataframe en columnas como depa_nombre,muni_nombre y tido_codigo
+Prestadores$depa_nombre <- stringi::stri_trans_general(Prestadores$depa_nombre, "Latin-ASCII")
+#quitar tildes
+Prestadores$depa_nombre <- iconv(Prestadores$depa_nombre, from = "latin1", to = "ASCII//TRANSLIT")#cambiar las minusculas
+#head(Prestadores)
+```
+
+```{r}
+# Imprimir los datos con tildes removidos
+Prestadores$muni_nombre <-  iconv(Prestadores$muni_nombre, to = "ASCII//TRANSLIT")
+#ead(Prestadores)
+```
+
+```{r}
+Prestadores$tido_codigo <- ifelse(is.na(Prestadores$tido_codigo), 0, Prestadores$tido_codigo)
+#ead(Prestadores)
+```
+
+```{r}
+Prestadores$muni_nombre <- str_to_title(tolower(Prestadores$muni_nombre))
+#head(Prestadores)
+```
+
+```{r}
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "San Andres", "San Andres De Cuerquia", Prestadores$muni_nombre)
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "Bogota", "Bogota D C", Prestadores$muni_nombre)
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "San Pablo", "San Pablo", Prestadores$muni_nombre)
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "Buenavista", "Buenavista", Prestadores$muni_nombre)
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "Puebloviejo", "Pueblo Viejo", Prestadores$muni_nombre)
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "Vistahermosa", "Vista Hermosa", Prestadores$muni_nombre)
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "Tumaco", "San Andres De Tumaco", Prestadores$muni_nombre)
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "Since", "Sincelejo", Prestadores$muni_nombre)
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "Rioblanco", "Rio Blanco", Prestadores$muni_nombre)
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "Buena Vista", "Buenavista", Prestadores$muni_nombre)
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "San Andres De Cuerquia", "San Andres", Prestadores$muni_nombre)
+
+Prestadores$muni_nombre <- ifelse(Prestadores$muni_nombre == "Buena Vista", "Buenavista", Prestadores$muni_nombre)
+
+
+Prestadores$depa_nombre<- ifelse(Prestadores$depa_nombre == "Cali", "Valle   Del   Cauca", Prestadores$depa_nombre)
+Prestadores$depa_nombre <- ifelse(Prestadores$depa_nombre == "Buenaventura", "Valle   Del   Cauca", Prestadores$depa_nombre)
+Prestadores$depa_nombre <- ifelse(Prestadores$depa_nombre == "Barranquilla", "Atlantico", Prestadores$depa_nombre)
+Prestadores$depa_nombre<- ifelse(Prestadores$depa_nombre == "Cartagena", "Bolivar", Prestadores$depa_nombre)
+Prestadores$depa_nombre<- ifelse(Prestadores$depa_nombre == "San Andres y Providencia", "San Andres", Prestadores$depa_nombre)
+Prestadores$depa_nombre<- ifelse(Prestadores$depa_nombre == "Santa Marta", "Magdalena", Prestadores$depa_nombre)
+Prestadores$depa_nombre<- ifelse(Prestadores$depa_nombre == "Bogota D.C", "Bogota D C", Prestadores$depa_nombre)
+Prestadores$depa_nombre<- ifelse(Prestadores$depa_nombre == "San Andres", "Antioquia", Prestadores$depa_nombre)
+Prestadores$depa_nombre<- ifelse(Prestadores$depa_nombre == "Valle   Del   Cauca", "Valle Del Cauca", Prestadores$depa_nombre)
+head(Prestadores)
+
+
+```
+
+##Descargar la base limpia
+```{r}
+write.csv2(Prestadores, "C:/Users/MARIO VARGAS/Downloads/Pruebas de trabajo 2024/Prueba Adres/Prestadores/Prestadores.csv", row.names = FALSE, fileEncoding = "latin1")
+```
+
+
+```{r}
+#Al realizar la liempieza cargamos los archivos csv a DBSQLite, donde se realizaran los JOIN
+file.choose()#Buscar ruta de BASEDB
+```
+
+##Query en SQLlite, se realizara un JOIN mediante Depmun para unir la data de Municipios y Prestadores, adcional con DIVIPOLA_CentrosPoblados del DANE
+```{r}
+library(DBI)
+
+# Establecer conexión con la base de datos SQLite
+base_datos <- dbConnect(SQLite(), "C:/Users/MARIO VARGAS/Downloads/Pruebas de trabajo 2024/Prueba Adres/bdprueba.db")
+```
+```{r}
+# Verifica la conexión
+dbListTables( base_datos,encoding = "latin1")
+```
+
+```{r}
+# Exploración de la tabla de Prestadores_Municipios con divipola
+Prestadores_Municipios <- dbGetQuery(base_datos, "SELECT * FROM Prestadores_Municipios_divipola",encoding = "latin1")
+```
+
+```{r}
+str(Prestadores_Municipios)#Tipo de Datos
+```
+
+#Cambiar a formatos int a fechas vencimiento
+```{r}
+Prestadores_Municipios$fecha_vencimiento <- as.Date(as.character(Prestadores_Municipios$fecha_vencimiento), format = "%Y%m%d")
+#Prestadores_Municipios$fecha_vencimiento
+```
+
+#Cambiar a formato int a fechas radicacion
+```{r}
+Prestadores_Municipios$fecha_radicacion <- as.Date(as.character(Prestadores_Municipios$fecha_radicacion),format = "%Y%m%d")
+#Prestadores_Municipios$fecha_radicacion
+
+```
+#Se genera una matriz de correlación para identificar patrones de algunas variables del dataframe
+
+```{r}
+# 'Prestadores_Municipios' es mi dataframe y calcular la correlación entre las columnas numéricas
+columnas_numericas <- Prestadores_Municipios[, sapply(Prestadores_Municipios, is.numeric)]
+
+# Calcular la matriz de correlación
+correlacion <- cor(columnas_numericas)
+
+# Mostrar la matriz de correlación
+print(correlacion)
+```
+
+```{r}
+
+# Seleccionar solo las columnas numéricas
+columnas_numericas <- Prestadores_Municipios[, sapply(Prestadores_Municipios, is.numeric)]
+
+# Calcular la matriz de correlación
+correlacion <- cor(columnas_numericas)
+
+# Convertir la matriz de correlación en un dataframe
+correlacion_df <- as.data.frame(as.table(correlacion))
+
+# Crear un gráfico de mapa de calor de la matriz de correlación
+ggplot(correlacion_df, aes(Var1, Var2, fill = Freq)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1,1), space = "Lab", name="Correlation") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 10, hjust = 1)) +
+  coord_fixed() +
+  labs(title = "Mapa de Calor de Correlación entre Variables Numéricas")
+
+```
+
+```{r}
+summary(Prestadores_Municipios)  # Estadasticas resumidas
+```
+
+```{r}
+table(Prestadores_Municipios$depa_nombre)  # Frecuencia para depa_nombre
+```
+#Visualizaciones y insights claves  
+```{r}
+#Visualización de frecuencia por Región
+library(dplyr)
+library(ggplot2)
+library(scales)
+# Visualización de datos
+# Obtener la tabla de frecuencias de la región
+tabla_frecuencia <- table(Prestadores_Municipios$Region)
+
+
+# Crear el gráfico de barras para la región
+barplot(tabla_frecuencia, 
+        xlab = "Región", 
+        ylab = "Frecuencia", 
+        main = "Gráfico de Barras para la Región", 
+        names.arg = as.character(unique(Prestadores_Municipios$Region)), 
+        ylim = c(0, max(tabla_frecuencia) + 1),
+        yaxt = "n")  # Suprime los ejes y predeterminados
+
+# Agregar los ejes y personalizados
+axis(2, at = pretty(tabla_frecuencia), labels = format(pretty(tabla_frecuencia), scientific = FALSE), las = 2, cex.axis = 0.8)
+
+# Etiquetar las barras con el número respectivo de frecuencia
+text(x = 1:length(tabla_frecuencia), y = tabla_frecuencia / 2, labels = tabla_frecuencia, pos = 3, cex = 0.8, col = "black")
+tabla_frecuencia
+
+```
+
+
+##Visualización 2
+
+```{r}
+#Grafico de torta por Municipio vs tipo de Persona
+# Calcular la frecuencia de las combinaciones de depa_nombre y clase_persona
+conteo <- Prestadores_Municipios %>%
+  group_by(depa_nombre, clase_persona) %>%
+  summarise(Count = n()) %>%
+  arrange(desc(Count))
+
+# Seleccionar las 10 combinaciones más grandes en valores
+top_10 <- conteo %>% top_n(10, Count)
+
+# Crear el diagrama de torta
+ggplot(top_10, aes(x = "", y = Count, fill = factor(depa_nombre))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +  # Convertir el gráfico en un diagrama de torta
+  facet_wrap(~ clase_persona) +  # Separar por clase_persona
+  labs(x = NULL, y = NULL, fill = "Departamento") +  # Ajustar etiquetas
+  theme_void() +  # Eliminar elementos de tema
+  theme(legend.position = "bottom")  # Mover la leyenda a la parte inferior
+
+```
+
+
+### Visualizacion 3
+```{r}
+#Visualización de Mapa de calor por Municipio y Población
+# Eliminar duplicados y sumar la poblacion
+datos_limpios <- Prestadores_Municipios %>%
+  distinct(depa_nombre, muni_nombre, .keep_all = TRUE) %>%  # Mantener solo una entrada por combinaci?n de departamento y municipio
+  group_by(depa_nombre, muni_nombre) %>%
+  summarise(Poblacion_total = sum(Poblacion), .groups = 'drop')  # A?adir .groups = 'drop' para evitar la advertencia
+
+# Obtener los 30 departamentos y municipios con mayor poblaci?n
+top_datos <- datos_limpios %>%
+  top_n(30, wt = Poblacion_total)
+
+# Crear el mapa de calor solo con los 30 principales
+mapa_calor <- ggplot(top_datos, aes(x = depa_nombre, y = muni_nombre, fill = Poblacion_total)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", labels = label_number()) + # Escala de colores con n?meros completos en la leyenda
+  labs(title = "Top 30 de Poblaci?n por Departamento y Municipio",
+       x = "Departamento", y = "Municipio", fill = "Poblaci?n") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) # Rotar etiquetas del eje x
+
+# Mostrar el mapa de calor
+print(mapa_calor)
+
+```
+# Visualización 4
+```{r}
+
+##Visualización grafico de torta para identificar el tipo de nombre de la categoria clpr_nombre
+# Agrupar por clpr_nombre y nits_nit, y contar las ocurrencias
+conteo <- count(Prestadores_Municipios, clpr_nombre, nits_nit)
+
+# Crear el diagrama de torta
+diagrama_torta <- ggplot(conteo, aes(x = "", y = n, fill = clpr_nombre)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +  # Coordenadas polares para convertir el grofico en un diagrama de torta
+  labs(title = "Distribucion de clpr_nombre", fill = "clpr_nombre") +
+  theme_void() +  # Eliminar elementos del tema para mostrar solo el diagrama de torta
+  theme(legend.position = "right")  # Posicion de la leyenda
+
+# Mostrar el diagrama de torta
+print(diagrama_torta)
+
+```
+#Visualización 5
+
+```{r}
+# Contar las ocurrencias de cada combinación de depa_nombre y clase_persona
+conteo <- count(Prestadores_Municipios, depa_nombre, clase_persona)
+
+# Crear el gráfico de barras
+grafico_barras <- ggplot(conteo, aes(x = depa_nombre, y = n, fill = clase_persona)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(title = "Distribución de clase_persona por departamento",
+       x = "Departamento", y = "Cantidad", fill = "Clase Persona") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotar etiquetas del eje x si es necesario
+
+# Mostrar el grafico de barras
+print(grafico_barras) 
+```
+
+```{r}
+# Contar las ocurrencias de cada combinacion de depa_nombre y clase_persona
+conteo <- count(Prestadores_Municipios, depa_nombre, clase_persona)
+
+# Calcular la frecuencia relativa de cada clase_persona dentro de cada depa_nombre
+tabla_resumen <- conteo %>%
+  group_by(depa_nombre) %>%
+  mutate(frecuencia_relativa = n / sum(n)) %>%
+  ungroup()
+
+# Mostrar la tabla resumen
+print(tabla_resumen)
+
+```
+
